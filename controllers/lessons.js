@@ -1,7 +1,7 @@
 // const Lessons = require("../models/lessons.model")
 const { Sequelize, Op } = require('sequelize');
 const sequelize = require("../config/db")
-const { Teachers, Lessons, Lesson_teachers, Lesson_students, Students } = require("../models/lesson_teachers.model")
+const { Teachers, Lessons, Lesson_teachers, Lesson_students, Students } = require("../models/allModel")
 
 const hr = require('../utils/helper')
 
@@ -12,7 +12,8 @@ module.exports.getLessons = async (req, res) => {
 
 	hr.cl("tichersfilterOptions", tichersfilterOptions)
 
-
+	// hr.cl("hr.getPagination(1, 12)", )
+	const pagination = hr.getPagination(req.body.page, req.body.lessonsPerPage)
 
 	if (typeof filterOptions == "string" && filterOptions.indexOf("Error") != -1) {
 		return res.status(400).json(filterOptions)
@@ -20,7 +21,12 @@ module.exports.getLessons = async (req, res) => {
 
 	try {
 		const lesson = await Lessons.findAll({
+			limit: pagination.limit,
+			offset: pagination.offset,
 			where: filterOptions,
+			// where: {
+			// 	[sequelize.fn('max', sequelize.col('age')), 'DESC'],
+			// },
 			include: [
 				{
 					model: Students,

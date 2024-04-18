@@ -2,7 +2,7 @@
 
 const sequelize = require("../config/db")
 
-const { Sequelize, DataTypes } = require('sequelize');
+const { DataTypes } = require('sequelize');
 
 const Lesson_teachers = sequelize.define('lesson_teacher', {}, {
 	timestamps: false
@@ -28,8 +28,7 @@ const Teachers = sequelize.define(
 		}
 	},
 	{
-		timestamps: false,
-		// tableName: 'teachers'
+		timestamps: false
 	}
 );
 
@@ -44,8 +43,7 @@ const Students = sequelize.define(
 	}
 	,
 	{
-		timestamps: false,
-		// tableName: 'students'
+		timestamps: false
 	}
 );
 
@@ -69,8 +67,7 @@ const Lessons = sequelize.define(
 		},
 	},
 	{
-		timestamps: false,
-		// tableName: 'lessons'
+		timestamps: false
 	}
 );
 
@@ -83,18 +80,6 @@ Students.belongsToMany(Lessons, { through: Lesson_students, foreignKey: 'student
 Lessons.belongsToMany(Students, { through: Lesson_students, foreignKey: 'lesson_id' })
 
 
-
-
-// Lessons.hasMany(Lesson_teachers, { foreignKey: 'lesson_id' });
-// Lesson_teachers.belongsTo(Lessons, { foreignKey: 'lesson_id' });
-
-// Teachers.hasMany(Lesson_teachers, { foreignKey: 'teacher_id' });
-// Lesson_teachers.belongsTo(Teachers, { foreignKey: 'teacher_id' });
-
-// Lesson_teachers.removeAttribute("id")
-
-// Students.hasMany(Lesson_students, { foreignKey: 'student_id' })
-// Lesson_students.belongsTo(Students, { foreignKey: 'student_id' })
 
 
 module.exports = {
