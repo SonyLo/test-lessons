@@ -1,4 +1,3 @@
-// const Lessons = require("../models/lessons.model")
 const { Sequelize, Op } = require('sequelize');
 const sequelize = require("../config/db")
 const { Teachers, Lessons, Lesson_teachers, Lesson_students, Students } = require("../models/allModel")
@@ -8,9 +7,10 @@ const hr = require('../utils/helper')
 
 module.exports.getLessons = async (req, res) => {
 
-	let { filterOptions, tichersfilterOptions } = filter(req.body)
+	let filterOptions = filter(req.body)
+	hr.cl("filter(req.body)", filter(req.body))
 
-	hr.cl("tichersfilterOptions", tichersfilterOptions)
+	// hr.cl("tichersfilterOptions", tichersfilterOptions)
 
 	// hr.cl("hr.getPagination(1, 12)", )
 	const pagination = hr.getPagination(req.body.page, req.body.lessonsPerPage)
@@ -18,63 +18,64 @@ module.exports.getLessons = async (req, res) => {
 	if (typeof filterOptions == "string" && filterOptions.indexOf("Error") != -1) {
 		return res.status(400).json(filterOptions)
 	}
-
-	try {
-		const lesson = await Lessons.findAll({
-			limit: pagination.limit,
-			offset: pagination.offset,
-			where: filterOptions,
-			// where: {
-			// 	[sequelize.fn('max', sequelize.col('age')), 'DESC'],
-			// },
-			include: [
-				{
-					model: Students,
-					attributes: [
-						'id',
-						'name',
-						[sequelize.literal('visit'), 'visit'] // Используем sequelize.literal для указания полного пути к атрибуту
-					],
-					through: {
-						model: Lesson_students,
-						attributes: []
-					}
-				},
-				{
-					model: Teachers,
-					attributes: [
-						'id',
-						'name'
-					],
-
-					where: tichersfilterOptions,
-					through: {
-						model: Lesson_teachers,
-						attributes: []
-					}
+	hr.cl("filterOptions", filterOptions)
+	// try {
+	const lesson = await Lessons.findAll({
+		// limit: pagination.limit,
+		// offset: pagination.offset,
+		where: filterOptions.options,
+		// where: { date: '2019-09-01', status: '1' },
+		// where: {
+		// 	[sequelize.fn('max', sequelize.col('age')), 'DESC'],
+		// },
+		include: [
+			{
+				model: Students,
+				attributes: [
+					'id',
+					'name',
+					[sequelize.literal('visit'), 'visit'] // Используем sequelize.literal для указания полного пути к атрибуту
+				],
+				through: {
+					model: Lesson_students,
+					attributes: []
 				}
-			]
-		});
-		//хз как правильно, но очень интересно
-		let countVisitTrue = null
-		let strQuery = `SELECT COUNT(students.id) AS visitCount
+			},
+			{
+				model: Teachers,
+				attributes: [
+					'id',
+					'name'
+				],
+
+				where: filterOptions.tichersfilterOptions,
+				through: {
+					model: Lesson_teachers,
+					attributes: []
+				}
+			}
+		]
+	});
+	//хз как правильно, но очень интересно
+	let countVisitTrue = null
+	let strQuery = `SELECT COUNT(students.id) AS visitCount
   				FROM lessons
   				LEFT JOIN lesson_students ON lessons.id = lesson_students.lesson_id
   				LEFT JOIN students ON lesson_students.student_id = students.id
   				WHERE lessons.id = @idLessons AND lesson_students.visit = true;`
 
-		for (let item of lesson) {
-			let query = strQuery.replace('@idLessons', item.id)
-			countVisitTrue = await sequelize.query(query, { type: Sequelize.QueryTypes.SELECT });
-			item.dataValues.visitCount = countVisitTrue[0].visitcount
-		}
-		hr.cl("lesson.count", lesson.length)
-		//хз как правильно, но очень интересно
-		res.status(200).json(lesson)
+	for (let item of lesson) {
+		let query = strQuery.replace('@idLessons', item.id)
+		countVisitTrue = await sequelize.query(query, { type: Sequelize.QueryTypes.SELECT });
+		item.dataValues.visitCount = countVisitTrue[0].visitcount
 	}
-	catch (err) {
-		res.status(400).json(err.message)
-	}
+	hr.cl("lesson.count", lesson.length)
+	//хз как правильно, но очень интересно
+	res.status(200).json(lesson)
+	// }
+	// catch (err) {
+	// 	res.status(400).json(err.message)
+	// }
 }
 
 
@@ -91,27 +92,31 @@ function filter(filterOptions) {
 			return dateResult
 		}
 		options.push(dateResult)
-
+		// options.date = dateResult
 	}
 
 
 	if (status != "") {
 		let statusResult = createFilterStatus(status)
+		hr.cl("statusResult", statusResult)
 		if (typeof statusResult == "string" && statusResult.indexOf("Error") != -1) {
+			hr.cl("'nj gbpltw", "sdsdss")
 			return statusResult
 		}
 		options.push(statusResult)
+		// options.status = statusResult
 	}
 
 	let tichersfilterOptions = []
 	if (teacherIds != "") {
 		tichersfilterOptions.push(createFilterTichers(teacherIds))
-		// hr.cl("tichersfilterOptions", tichersfilterOptions)
+
 	}
 	else {
 		tichersfilterOptions = ""
 	}
 
+	hr.cl("options", options)
 
 	return { options, tichersfilterOptions }
 
@@ -192,4 +197,3 @@ function isValidDate(dateString) {
 	if (!dNum && dNum !== 0) return false; // NaN value, Invalid date
 	return d.toISOString().slice(0, 10) === dateString;
 }
-
