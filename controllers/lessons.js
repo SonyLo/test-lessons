@@ -8,74 +8,71 @@ const hr = require('../utils/helper')
 module.exports.getLessons = async (req, res) => {
 
 	let filterOptions = filter(req.body)
-	hr.cl("filter(req.body)", filter(req.body))
+	// hr.cl("filter(req.body)", filter(req.body))
 
-	// hr.cl("tichersfilterOptions", tichersfilterOptions)
+	const page = hr.tryParseInt(req.body.page, 1);
+	const lessonsPerPage = hr.tryParseInt(req.body.lessonsPerPage, 5);
+	const pagination = hr.getPagination(page, lessonsPerPage)
 
-	// hr.cl("hr.getPagination(1, 12)", )
-	const pagination = hr.getPagination(req.body.page, req.body.lessonsPerPage)
 
 	if (typeof filterOptions == "string" && filterOptions.indexOf("Error") != -1) {
 		return res.status(400).json(filterOptions)
 	}
-	hr.cl("filterOptions", filterOptions)
-	// try {
-	const lesson = await Lessons.findAll({
-		// limit: pagination.limit,
-		// offset: pagination.offset,
-		where: filterOptions.options,
-		// where: { date: '2019-09-01', status: '1' },
-		// where: {
-		// 	[sequelize.fn('max', sequelize.col('age')), 'DESC'],
-		// },
-		include: [
-			{
-				model: Students,
-				attributes: [
-					'id',
-					'name',
-					[sequelize.literal('visit'), 'visit'] // Используем sequelize.literal для указания полного пути к атрибуту
-				],
-				through: {
-					model: Lesson_students,
-					attributes: []
-				}
-			},
-			{
-				model: Teachers,
-				attributes: [
-					'id',
-					'name'
-				],
+	// hr.cl("filterOptions", filterOptions)
+	hr.cl("pagination", pagination)
+	try {
+		const lesson = await Lessons.findAll({
+			limit: pagination.limit,
+			offset: pagination.offset,
+			where: filterOptions.options,
+			include: [
+				{
+					model: Students,
+					attributes: [
+						'id',
+						'name',
+						[sequelize.literal('visit'), 'visit']
+					],
+					through: {
+						model: Lesson_students,
+						attributes: []
+					}
+				},
+				{
+					model: Teachers,
+					attributes: [
+						'id',
+						'name'
+					],
 
-				where: filterOptions.tichersfilterOptions,
-				through: {
-					model: Lesson_teachers,
-					attributes: []
+					where: filterOptions.tichersfilterOptions,
+					through: {
+						model: Lesson_teachers,
+						attributes: []
+					}
 				}
-			}
-		]
-	});
-	//хз как правильно, но очень интересно
-	let countVisitTrue = null
-	let strQuery = `SELECT COUNT(students.id) AS visitCount
+			]
+		});
+		//хз как правильно, но очень интересно
+		let countVisitTrue = null
+		let strQuery = `SELECT COUNT(students.id) AS visitCount
   				FROM lessons
   				LEFT JOIN lesson_students ON lessons.id = lesson_students.lesson_id
   				LEFT JOIN students ON lesson_students.student_id = students.id
   				WHERE lessons.id = @idLessons AND lesson_students.visit = true;`
 
-	for (let item of lesson) {
-		let query = strQuery.replace('@idLessons', item.id)
-		countVisitTrue = await sequelize.query(query, { type: Sequelize.QueryTypes.SELECT });
-		item.dataValues.visitCount = countVisitTrue[0].visitcount
+		for (let item of lesson) {
+			let query = strQuery.replace('@idLessons', item.id)
+			countVisitTrue = await sequelize.query(query, { type: Sequelize.QueryTypes.SELECT });
+			item.dataValues.visitCount = countVisitTrue[0].visitcount
+		}
+		hr.cl("lesson.count", lesson.length)
+		//хз как правильно, но очень интересно
+		res.status(200).json(lesson)
 	}
-	hr.cl("lesson.count", lesson.length)
-	//хз как правильно, но очень интересно
-	res.status(200).json(lesson)
-	// }
-	// catch (err) {
-	// 	res.status(400).json(err.message)
-	// }
+	catch (err) {
+		res.status(400).json(err.message)
+	}
 }
 
 
@@ -92,19 +89,19 @@ function filter(filterOptions) {
 			return dateResult
 		}
 		options.push(dateResult)
-		// options.date = dateResult
+
 	}
 
 
 	if (status != "") {
 		let statusResult = createFilterStatus(status)
-		hr.cl("statusResult", statusResult)
+
 		if (typeof statusResult == "string" && statusResult.indexOf("Error") != -1) {
-			hr.cl("'nj gbpltw", "sdsdss")
+
 			return statusResult
 		}
 		options.push(statusResult)
-		// options.status = statusResult
+
 	}
 
 	let tichersfilterOptions = []
@@ -116,7 +113,7 @@ function filter(filterOptions) {
 		tichersfilterOptions = ""
 	}
 
-	hr.cl("options", options)
+
 
 	return { options, tichersfilterOptions }
 
