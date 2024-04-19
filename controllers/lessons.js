@@ -8,8 +8,6 @@ const hr = require('../utils/helper')
 module.exports.getLessons = async (req, res) => {
 
 	let filterOptions = filter(req.body)
-	// hr.cl("filter(req.body)", filter(req.body))
-
 	const page = hr.tryParseInt(req.body.page, 1);
 	const lessonsPerPage = hr.tryParseInt(req.body.lessonsPerPage, 5);
 	const pagination = hr.getPagination(page, lessonsPerPage)
@@ -18,8 +16,7 @@ module.exports.getLessons = async (req, res) => {
 	if (typeof filterOptions == "string" && filterOptions.indexOf("Error") != -1) {
 		return res.status(400).json(filterOptions)
 	}
-	// hr.cl("filterOptions", filterOptions)
-	hr.cl("pagination", pagination)
+
 	try {
 		const lesson = await Lessons.findAll({
 			limit: pagination.limit,
@@ -36,7 +33,8 @@ module.exports.getLessons = async (req, res) => {
 					through: {
 						model: Lesson_students,
 						attributes: []
-					}
+					},
+
 				},
 				{
 					model: Teachers,
@@ -44,7 +42,6 @@ module.exports.getLessons = async (req, res) => {
 						'id',
 						'name'
 					],
-
 					where: filterOptions.tichersfilterOptions,
 					through: {
 						model: Lesson_teachers,
@@ -107,14 +104,10 @@ function filter(filterOptions) {
 	let tichersfilterOptions = []
 	if (teacherIds != "") {
 		tichersfilterOptions.push(createFilterTichers(teacherIds))
-
 	}
 	else {
 		tichersfilterOptions = ""
 	}
-
-
-
 	return { options, tichersfilterOptions }
 
 }
@@ -123,11 +116,11 @@ function filter(filterOptions) {
 function createFilterDate(date) {
 	let dataFilter = ""
 
-	// hr.cl(date)
+
 	let massDate = date.split(',')
-	// hr.cl("massDate", massDate)
+
 	if (massDate.length > 2) {
-		// hr.cl(massDate)
+
 		return "Error: many arg"
 	}
 
@@ -178,8 +171,6 @@ function createFilterTichers(teacherIds) {
 	let tichersIdsResult = {
 		id: arrIds
 	}
-	// hr.cl("tichersIdsResult", tichersIdsResult)
-	// hr.cl("tichersIdsResult", tichersIdsResult)
 	return tichersIdsResult
 
 }
@@ -187,10 +178,10 @@ function createFilterTichers(teacherIds) {
 function isValidDate(dateString) {
 
 	var regEx = /^\d{4}-\d{2}-\d{2}$/;
-	if (!dateString.match(regEx)) return false;  // Invalid format
+	if (!dateString.match(regEx)) return false;
 	var d = new Date(dateString);
 
 	var dNum = d.getTime();
-	if (!dNum && dNum !== 0) return false; // NaN value, Invalid date
+	if (!dNum && dNum !== 0) return false;
 	return d.toISOString().slice(0, 10) === dateString;
 }
