@@ -1,9 +1,9 @@
 
-const express = require('express')
+import express from 'express'
 const app = express()
 const port = 3000
-const bodyParser = require('body-parser')
-const lessonsRouters = require("./routers/lessons")
+import bodyParser from 'body-parser'
+import lessonsRouters from "./routers/lessons.js"
 
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())

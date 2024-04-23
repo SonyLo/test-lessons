@@ -1,7 +1,7 @@
-const express = require('express')
-const router = express.Router()
-const controller = require('../controllers/lessons')
+import express from 'express'
+const lessonsRouters = express.Router()
+import { getLessons } from '../controllers/lessons.js'
 
-router.get("/", controller.getLessons)
+lessonsRouters.get("/", getLessons)
 
-module.exports = router
+export default lessonsRouters

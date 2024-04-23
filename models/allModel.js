@@ -1,8 +1,11 @@
 
 
-const sequelize = require("../config/db")
+import sequelize from "../config/db.js"
 
-const { DataTypes } = require('sequelize');
+import { DataTypes } from 'sequelize';
+
+
+
 
 const Lesson_teachers = sequelize.define('lesson_teacher', {}, {
 	timestamps: false
@@ -82,12 +85,21 @@ Lessons.belongsToMany(Students, { through: Lesson_students, foreignKey: 'lesson_
 
 
 
-module.exports = {
+
+
+
+
+
+export {
 	Lesson_teachers,
 	Lesson_students,
 	Teachers,
 	Lessons,
 	Students
 }
+
+// export default { Lesson_teachers, Lesson_students }
+
+
 
 

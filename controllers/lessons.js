@@ -1,75 +1,90 @@
-const { Sequelize, Op } = require('sequelize');
-const sequelize = require("../config/db")
-const { Teachers, Lessons, Lesson_teachers, Lesson_students, Students } = require("../models/allModel")
+import { Sequelize, Op } from 'sequelize';
+import sequelize from "../config/db.js"
+import { Teachers, Lessons, Lesson_teachers, Lesson_students, Students } from "../models/allModel.js"
 
-const hr = require('../utils/helper')
+// import hr from '../utils/helper.js'
+import { cl, getPagination, tryParseInt } from '../utils/helper.js'
 
-
-module.exports.getLessons = async (req, res) => {
-
-	let filterOptions = filter(req.body)
-	const page = hr.tryParseInt(req.body.page, 1);
-	const lessonsPerPage = hr.tryParseInt(req.body.lessonsPerPage, 5);
-	const pagination = hr.getPagination(page, lessonsPerPage)
+let lessons = await Lessons.findAll({})
 
 
-	if (typeof filterOptions == "string" && filterOptions.indexOf("Error") != -1) {
-		return res.status(400).json(filterOptions)
-	}
 
-	try {
-		const lesson = await Lessons.findAll({
-			limit: pagination.limit,
-			offset: pagination.offset,
-			where: filterOptions.options,
-			include: [
-				{
-					model: Students,
-					attributes: [
-						'id',
-						'name',
-						[sequelize.literal('visit'), 'visit']
-					],
-					through: {
-						model: Lesson_students,
-						attributes: []
-					},
+const getLessons = async (req, res) => {
 
-				},
-				{
-					model: Teachers,
-					attributes: [
-						'id',
-						'name'
-					],
-					where: filterOptions.tichersfilterOptions,
-					through: {
-						model: Lesson_teachers,
-						attributes: []
-					}
-				}
-			]
-		});
-		//хз как правильно, но очень интересно
-		let countVisitTrue = null
-		let strQuery = `SELECT COUNT(students.id) AS visitCount
-  				FROM lessons
-  				LEFT JOIN lesson_students ON lessons.id = lesson_students.lesson_id
-  				LEFT JOIN students ON lesson_students.student_id = students.id
-  				WHERE lessons.id = @idLessons AND lesson_students.visit = true;`
 
-		for (let item of lesson) {
-			let query = strQuery.replace('@idLessons', item.id)
-			countVisitTrue = await sequelize.query(query, { type: Sequelize.QueryTypes.SELECT });
-			item.dataValues.visitCount = countVisitTrue[0].visitcount
-		}
-		hr.cl("lesson.count", lesson.length)
-		//хз как правильно, но очень интересно
-		res.status(200).json(lesson)
-	}
-	catch (err) {
-		res.status(400).json(err.message)
-	}
+	cl("req.query", req.query)
+	res.status(200).json("ok")
+	// let filterOptions = filter(req.body)
+	// const page = hr.tryParseInt(req.body.page, 1);
+	// const lessonsPerPage = hr.tryParseInt(req.body.lessonsPerPage, 5);
+	// const pagination = hr.getPagination(page, lessonsPerPage)
+
+
+	// if (typeof filterOptions == "string" && filterOptions.indexOf("Error") != -1) {
+	// 	return res.status(400).json(filterOptions)
+	// }
+
+	// try {
+	// 	const lesson = await Lessons.findAll({
+	// 		limit: pagination.limit,
+	// 		offset: pagination.offset,
+	// 		where: filterOptions.options,
+	// 		include: [
+	// 			{
+	// 				model: Students,
+	// 				attributes: [
+	// 					'id',
+	// 					'name',
+	// 					[sequelize.literal('visit'), 'visit']
+	// 				],
+	// 				through: {
+	// 					model: Lesson_students,
+	// 					attributes: []
+	// 				},
+	// 			},
+	// 			{
+	// 				model: Teachers,
+	// 				attributes: [
+	// 					'id',
+	// 					'name'
+	// 				],
+	// 				where: filterOptions.tichersfilterOptions,
+	// 				through: {
+	// 					model: Lesson_teachers,
+	// 					attributes: []
+	// 				}
+	// 			}
+	// 		],
+	// 		attributes: [
+	// 			'id',
+	// 			'date',
+	// 			'title',
+	// 			'status',
+	// 			// [sequelize.col('students.id'), 'st.id'],
+	// 			'students.id'
+	// 			// [sequelize.fn('COUNT', sequelize.literal('DISTINCT "Students"."id"')), 'visitCount']
+	// 		]
+	// 	});
+	// 	//хз как правильно, но очень интересно
+	// 	let countVisitTrue = null
+	// 	let strQuery = `SELECT COUNT(students.id) AS visitCount
+	// 			FROM lessons
+	// 			LEFT JOIN lesson_students ON lessons.id = lesson_students.lesson_id
+	// 			LEFT JOIN students ON lesson_students.student_id = students.id
+	// 			WHERE lessons.id = @idLessons AND lesson_students.visit = true;`
+
+	// 	for (let item of lesson) {
+	// 		let query = strQuery.replace('@idLessons', item.id)
+	// 		countVisitTrue = await sequelize.query(query, { type: Sequelize.QueryTypes.SELECT });
+	// 		item.dataValues.visitCount = countVisitTrue[0].visitcount
+	// 	}
+	// 	hr.cl("lesson.count", lesson.length)
+	// 	//хз как правильно, но очень интересно
+	// 	res.status(200).json(lesson)
+	// }
+	// catch (err) {
+	// 	res.status(400).json(err.message)
+	// }
 }
 
 
@@ -185,3 +200,6 @@ function isValidDate(dateString) {
 	if (!dNum && dNum !== 0) return false;
 	return d.toISOString().slice(0, 10) === dateString;
 }
+
+
+export { getLessons }
